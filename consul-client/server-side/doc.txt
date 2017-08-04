@@ -1,0 +1,17 @@
+run consul server
+./consul agent -server -ui -bootstrap-expect=1 -data-dir=/tmp/consul \
+-node=agent-218 -bind=172.16.6.218 -enable-script-checks=true \
+-config-dir=./consul_conf.d -client=0.0.0.0
+
+
+通过api注册服务
+curl -X PUT -d '{"Datacenter": "dc1", "Node": "mysql-server", \
+"Address": "mysql-2.node.consul","Service": {"Service": "mysql", \
+"tags": ["slave","v1"],"Port": 3306}}' http://127.0.0.1:8500/v1/catalog/register
+
+删除服务
+curl -X PUT -H 'application/json' -d '{"Node": "mysql-server", \
+"ServiceID":"mysql"}' http://127.0.0.1:8500/v1/catalog/deregister
+
+删除node
+curl -X PUT -H 'application/json' -d '{"Node": "mysql-server"}' http://127.0.0.1:8500/v1/catalog/deregister
