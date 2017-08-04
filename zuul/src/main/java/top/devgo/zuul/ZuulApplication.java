@@ -3,25 +3,38 @@ package top.devgo.zuul;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.netflix.zuul.ZuulFilter;
 import com.netflix.zuul.context.RequestContext;
+import org.apache.http.Header;
+import org.apache.http.HttpResponse;
+import org.apache.http.client.methods.CloseableHttpResponse;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.cloud.context.config.annotation.RefreshScope;
+import org.springframework.cloud.netflix.ribbon.support.RibbonRequestCustomizer;
 import org.springframework.cloud.netflix.zuul.EnableZuulProxy;
+import org.springframework.cloud.netflix.zuul.filters.ProxyRequestHelper;
 import org.springframework.cloud.netflix.zuul.filters.ZuulProperties;
+import org.springframework.cloud.netflix.zuul.filters.route.RibbonCommandFactory;
+import org.springframework.cloud.netflix.zuul.filters.route.SimpleHostRoutingFilter;
+import org.springframework.cloud.netflix.zuul.util.ZuulRuntimeException;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Primary;
 import org.springframework.http.HttpMethod;
+import org.springframework.util.LinkedMultiValueMap;
+import org.springframework.util.MultiValueMap;
 import org.springframework.util.StreamUtils;
 
 import javax.annotation.PreDestroy;
+import javax.servlet.http.HttpServletRequest;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.Charset;
-import java.util.Map;
+import java.util.*;
 
 
 @SpringBootApplication
@@ -51,6 +64,18 @@ public class ZuulApplication {
         return new PreProcessFilter();
     }
 
+
+    @Bean
+    public EnhanceHostRoutingFilter enhanceHostRoutingFilter(@Autowired ProxyRequestHelper helper, @Autowired ZuulProperties properties) {
+        return new EnhanceHostRoutingFilter(helper, properties);
+    }
+
+    @Bean
+    public EnhanceRibbonRoutingFilter enhanceRibbonRoutingFilter(@Autowired ProxyRequestHelper helper,
+                                                                 @Qualifier("ribbonCommandFactory") RibbonCommandFactory<?> ribbonCommandFactory){
+        //init param from  https://github.com/spring-cloud/spring-cloud-netflix/blob/master/spring-cloud-netflix-core/src/main/java/org/springframework/cloud/netflix/zuul/ZuulProxyAutoConfiguration.java
+        return new EnhanceRibbonRoutingFilter(helper, ribbonCommandFactory, Collections.emptyList());
+    }
 
     @PreDestroy
     public void destroy(){
@@ -136,8 +161,16 @@ class PreProcessFilter extends ZuulFilter {
             token = ctx.getRequest().getParameter("token");
         }
 
+
         if (checkToken(token)) {
             pass(ctx);
+            //add custom header
+            //insight from http://dockone.io/article/2186
+            EnhanceHttpServletRequest newRequest = new EnhanceHttpServletRequest(ctx.getRequest());
+            Map<String, String> header = new HashMap<>();
+            header.put("X-HEADER", "yolo~");
+            newRequest.setNewHeader(header);
+            ctx.setRequest(newRequest);
         } else {
             ban(ctx, 403, "{\"result\":\"token is not correct!\"}");
         }

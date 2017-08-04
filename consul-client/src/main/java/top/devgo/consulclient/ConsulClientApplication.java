@@ -15,6 +15,8 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import javax.servlet.http.HttpServletRequest;
+
 import static org.springframework.web.bind.annotation.RequestMethod.POST;
 
 @SpringBootApplication
@@ -39,7 +41,8 @@ public class ConsulClientApplication {
     }
 
     @RequestMapping(value = "/yas", method = POST)
-    public YasResp yetAnotherService(@RequestBody YasResq yasResq) {
+    public YasResp yetAnotherService(@RequestBody YasResq yasResq, HttpServletRequest request) {
+        System.out.println("data from header: " + request.getHeader("X-HEADER"));
         System.out.println("yas token: " + yasResq.getToken());
         return new YasResp(0, "ok");
     }
