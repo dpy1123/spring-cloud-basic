@@ -3,6 +3,8 @@ run consul server
 -node=agent-218 -bind=172.16.6.218 -enable-script-checks=true \
 -config-dir=./consul_conf.d -client=0.0.0.0
 
+加入集群
+./consul join 172.16.6.112
 
 通过api注册服务
 curl -X PUT -d '{"Datacenter": "dc1", "Node": "mysql-server", \
