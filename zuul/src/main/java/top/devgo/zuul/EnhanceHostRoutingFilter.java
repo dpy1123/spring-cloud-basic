@@ -171,8 +171,9 @@ public class EnhanceHostRoutingFilter extends ZuulFilter {
 
 		//[enhance]
         if (request instanceof EnhanceHttpServletRequest){
-            Map<String, String> newHeader = ((EnhanceHttpServletRequest) request).getNewHeader();
-            newHeader.keySet().forEach(key -> headers.set(key, newHeader.get(key)));
+            EnhanceHttpServletRequest enhanceRequest = (EnhanceHttpServletRequest) request;
+            enhanceRequest.getNewHeader().keySet().forEach(key -> headers.set(key, enhanceRequest.getNewHeader().get(key)));
+            enhanceRequest.getHeaders2Remove().forEach(name -> headers.remove(name));
         }
 
 		try {

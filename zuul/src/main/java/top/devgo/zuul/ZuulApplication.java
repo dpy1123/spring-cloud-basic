@@ -20,6 +20,7 @@ import org.springframework.cloud.netflix.zuul.filters.ProxyRequestHelper;
 import org.springframework.cloud.netflix.zuul.filters.ZuulProperties;
 import org.springframework.cloud.netflix.zuul.filters.route.RibbonCommandFactory;
 import org.springframework.cloud.netflix.zuul.filters.route.SimpleHostRoutingFilter;
+import org.springframework.cloud.netflix.zuul.filters.support.FilterConstants;
 import org.springframework.cloud.netflix.zuul.util.ZuulRuntimeException;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Primary;
@@ -91,7 +92,7 @@ class PreProcessFilter extends ZuulFilter {
 
     @Override
     public String filterType() {
-        return "pre";
+        return FilterConstants.PRE_TYPE;
     }
 
     @Override
@@ -166,11 +167,10 @@ class PreProcessFilter extends ZuulFilter {
             pass(ctx);
             //add custom header
             //insight from http://dockone.io/article/2186
-            EnhanceHttpServletRequest newRequest = new EnhanceHttpServletRequest(ctx.getRequest());
-            Map<String, String> header = new HashMap<>();
-            header.put("X-HEADER", "yolo~");
-            newRequest.setNewHeader(header);
-            ctx.setRequest(newRequest);
+            EnhanceHttpServletRequest enhanceRequest = new EnhanceHttpServletRequest(ctx.getRequest());
+            enhanceRequest.addHeader("X-HEADER", "yolo~");
+            enhanceRequest.addRemoveHeaders("");
+            ctx.setRequest(enhanceRequest);
         } else {
             ban(ctx, 403, "{\"result\":\"token is not correct!\"}");
         }
