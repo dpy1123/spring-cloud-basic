@@ -1,0 +1,6 @@
+{
+  "acl_datacenter": "dc1",
+  "acl_master_token": "dpy1123",
+  //"acl_token": "dpy1123", //only active on ui server node, to enable config acl on web-ui
+  "acl_default_policy": "deny"
+}

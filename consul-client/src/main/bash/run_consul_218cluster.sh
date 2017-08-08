@@ -1,8 +1,12 @@
 #!/usr/bin/env bash
 
-mkdir /tmp/consul-config
+if [ ! -d /tmp/consul-config ]; then
+    mkdir /tmp/consul-config
+fi
 
-nohup ./consul agent -node=client-dd -data-dir /tmp/consul -config-dir=/tmp/consul-config > /tmp/consul.log 2>&1 &
+cp acl_config.json /tmp/consul-config/
+
+nohup ./consul agent -ui -node=client-dd -data-dir /tmp/consul -config-dir=/tmp/consul-config > /tmp/consul.log 2>&1 &
 
 ./consul join 172.16.6.218
 
